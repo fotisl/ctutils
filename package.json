@@ -1,0 +1,54 @@
+{
+  "name": "ctutils",
+  "version": "0.9.0",
+  "description": "Utilities for interacting with Certificate Transparency logs",
+  "main": "build/index.js",
+  "module": "src/index.js",
+  "jsnext:main": "src/index.js",
+  "scripts": {
+    "build": "babel src --compact=false --out-dir build --source-maps",
+    "generate-docs": "jsdoc --destination doc/ src/",
+    "lint": "eslint src",
+    "postinstall": "npm run build",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fotisl/ctutils.git"
+  },
+  "keywords": [
+    "PKI",
+    "X.509",
+    "Certificate-Transparency",
+    "CT"
+  ],
+  "author": "Fotis Loukos <me@fotisl.com>",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/fotisl/ctutils/issues"
+  },
+  "homepage": "https://github.com/fotisl/ctutils#readme",
+  "dependencies": {
+    "asn1js": "^2.0.19",
+    "node-webcrypto-ossl": "^1.0.36",
+    "pkijs": "^2.1.46",
+    "pvutils": "^1.0.12",
+    "request": "^2.85.0",
+    "request-promise-native": "^1.0.5"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "eslint": "^4.19.1",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-plugin-import": "^2.11.0",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-promise": "^3.7.0",
+    "eslint-plugin-standard": "^3.1.0",
+    "jsdoc": "^3.5.5",
+    "mocha": "^5.1.1"
+  },
+  "browser": {
+    "./build/webcrypto.js": false
+  }
+}
