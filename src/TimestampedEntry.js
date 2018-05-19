@@ -52,6 +52,8 @@ export default class TimestampedEntry {
     let certView;
     let timestampedEntryLen;
 
+    const extensionsView = new Uint8Array(this.extensions);
+
     if(this.type === LogEntryType.x509_entry) {
       certView = new Uint8Array(this.cert);
       timestampedEntryLen = 15 + certView.length + extensionsView.length;
@@ -59,7 +61,6 @@ export default class TimestampedEntry {
       certView = new Uint8Array(this.cert.toBinary());
       timestampedEntryLen = 12 + certView.length + extensionsView.length;
     }
-    const extensionsView = new Uint8Array(this.extensions);
 
     const timestampedEntry = new ArrayBuffer(timestampedEntryLen);
     const timestampedEntryView = new Uint8Array(timestampedEntry);

@@ -12,7 +12,7 @@ const CTUtils = require('..');
 
 describe('SignedTreeHead', () => {
   describe('#verify()', () => {
-    it('should verify correct ECDSA SignedTreeHead', () => {
+    it('should verify correct ECDSA SignedTreeHead with public key', () => {
       const rootHash = pvutils.stringToArrayBuffer(pvutils.fromBase64(
         '7IXxX5gNLhKS4vANtkO0gPAqx9YRra17IJfzMJM2AiQ='));
 
@@ -28,6 +28,28 @@ describe('SignedTreeHead', () => {
         signature, CTUtils.Version.v1);
 
       return sth.verify(pubKey).then(res => {
+        assert.equal(res, true, 'Cannot verify');
+      });
+    });
+
+    it('should verify correct ECDSA SignedTreeHead with CTLog', () => {
+      const rootHash = pvutils.stringToArrayBuffer(pvutils.fromBase64(
+        '7IXxX5gNLhKS4vANtkO0gPAqx9YRra17IJfzMJM2AiQ='));
+
+      const signature = pvutils.stringToArrayBuffer(pvutils.fromBase64(
+        'BAMARjBEAiBktm+l47z01OLaAAwUtDGNr+xzjJJRG5aNBcx3fBxxBQIgTlC/Ck3cSLu' +
+        'K23N+/7BQxv4xfQbF1RH7pG/6S3N6Z4U='));
+
+      const pubKey = pvutils.stringToArrayBuffer(pvutils.fromBase64(
+        'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE0gBVBa3VR7QZu82V+ynXWD14JM3ORp3' +
+        '7MtRxTmACJV5ZPtfUA7htQ2hofuigZQs+bnFZkje+qejxoyvk2Q1VaA=='));
+
+      const log = new CTUtils.CTLog('ct.googleapis.com/pilot/', pubKey);
+
+      const sth = new CTUtils.SignedTreeHead(170761442, 1526202484196, rootHash,
+        signature, CTUtils.Version.v1);
+
+      return sth.verify(log).then(res => {
         assert.equal(res, true, 'Cannot verify');
       });
     });

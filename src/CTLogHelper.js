@@ -20,7 +20,7 @@ export default class CTLogHelper {
    */
   constructor(logs = []) {
     /**
-     * @type Array<CTLog>
+     * @type Array.<CTLog>
      * @description An array of all logs stored.
      */
     this.logs = logs;
@@ -29,7 +29,7 @@ export default class CTLogHelper {
   /**
    * Fetch all logs from a url based on the standard google json schema.
    * @param {string} url - The url to fetch logs from.
-   * @return {Promise<Boolean>} A Promise that is resolved with the result of
+   * @return {Promise.<Boolean>} A Promise that is resolved with the result of
    * the file parsing.
    */
   fetch(url) {
@@ -115,7 +115,7 @@ export default class CTLogHelper {
    * Since different logs may use different algorithms, the algorithm for
    * every log is heuristically determined. If you need to specify the
    * algorithm yourself, you can use the generateId() method of every CTLog.
-   * @return {Promise<Boolean>} The result of the generation. This will
+   * @return {Promise.<Boolean>} The result of the generation. This will
    * normally be true, and it's used to notify that the calculation has
    * finished.
    */
@@ -138,11 +138,11 @@ export default class CTLogHelper {
   }
 
   /**
-   * Get a CTLog by url.
+   * Find a log by url.
    * @param {string} url - The log's url.
    * @return {CTLog} The log or null if it cannot be found.
    */
-  getByUrl(url) {
+  findByUrl(url) {
     let search = url;
 
     if(search.startsWith('https://'))
@@ -168,7 +168,7 @@ export default class CTLogHelper {
   }
 
   /**
-   * Get a CTLog by description.
+   * Find a log by description.
    * The search is case insensitive and searches for if the string is part of
    * the log description. If multiple logs match the description, only the first
    * will be returned.
@@ -176,7 +176,7 @@ export default class CTLogHelper {
    * matching.
    * @return {CTLog} The log or null if it cannot be found.
    */
-  getByDescription(description) {
+  findByDescription(description) {
     for(const log of this.logs) {
       if(log.url.toLowerCase().includes(description.toLowerCase()))
         return log;

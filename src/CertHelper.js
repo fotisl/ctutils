@@ -14,7 +14,6 @@ import MerkleTreeLeaf from './MerkleTreeLeaf';
 import SignedCertificateTimestamp from './SignedCertificateTimestamp';
 import PreCert from './PreCert';
 import { LogEntryType, MerkleLeafType } from './Enums';
-import * as pvutils from 'pvutils';
 
 /**
  * CertHelper class
@@ -27,7 +26,7 @@ export default class CertHelper {
    * can be signed by a certificate with the CT EKU.
    * @param {pkijs.Certificate} cert - The certificate whose key hash will be
    * generated.
-   * @return {Promise<ArrayBuffer>} A promise that is resolved with the key
+   * @return {Promise.<ArrayBuffer>} A promise that is resolved with the key
    * hash.
    */
   static getKeyHash(cert) {
@@ -44,9 +43,9 @@ export default class CertHelper {
    * @param {ArrayBuffer} issuerKeyHash - The issuer key hash. For more
    * information, please see the getKeyHash() documentation. If this is null,
    * then the SCTs will be extracted but the cert field will not be populated.
-   * This is useful if you want to extract the information from the SCT but you
-   * will not be able to perform any kind of validation.
-   * @return {Array<SignedCertificateTimestamp>} An array of
+   * This is useful if you want to extract the information from the certificate
+   * but you will not be able to perform any kind of validation.
+   * @return {Array.<SignedCertificateTimestamp>} An array of
    * SignedCertificateTimestamp objects or null if no SCTs exist in the
    * certificate.
    */
@@ -123,17 +122,26 @@ export default class CertHelper {
    * @param {pkijs.Certificate} cert - The certificate that will be validated.
    * @param {ArrayBuffer} issuerKeyHash - The issuer key hash. For more
    * information, please see the getKeyHash() documentation.
-   * @param {Array<CTLog>} ctLogs - An array of CTLog objects. The only logs
-   * that need to be included are the logs that issued the SCTs. Furthermore,
-   * the only fields used are the logId and the public key of the log.
-   * @return {Promise<Boolean>} A promise that is resolved with the result of
+   * @param {(Array.<CTLog>|CTLogHelper)} ctLogs - An array of CTLog objects or
+   * a CTLogHelper object. The only logs that need to be included are the logs
+   * that issued the SCTs. Furthermore, the only fields used are the logId and
+   * the public key of the log.
+   * @return {Promise.<Boolean>} A promise that is resolved with the result of
    * the validation. If there are no SCTs in the certificate, then the result
    * of the validation will be true. If an SCT belongs to a log that is not
    * included in ctLogs, then the result will be false;
    */
   static validateCertSCT(cert, issuerKeyHash, ctLogs) {
-    const logHelper = new CTLogHelper(ctLogs);
     const sctList = CertHelper.extractSCTFromCert(cert, issuerKeyHash);
+    let logHelper;
+
+    if(ctLogs instanceof CTLogHelper) {
+      logHelper = ctLogs;
+    } else if(ctLogs instanceof Array) {
+      logHelper = new CTLogHelper(ctLogs);
+    } else {
+      return Promise.reject(new Error('Unkown ctlogs type'));
+    }
 
     if(sctList.length === 0)
       return Promise.resolve(true);
@@ -170,14 +178,23 @@ export default class CertHelper {
    * @param {SignedCertificateTimestamp} sct - The SCT that will be checked.
    * Even if it is not required for other operations, the type and cert fields
    * must be set.
-   * @param {Array<CTLog>} ctLogs - An array of CTLog objects. The only log
-   * that needs to be included is the log that issued the SCT. Furthermore,
-   * the only fields used are the url, the logId and the public key of the log.
-   * @return {Promise<Boolean>} A promise that is resolved with the result of
+   * @param {(Array.<CTLog>|CTLogHelper)} ctLogs - An array of CTLog objects or
+   * a CTLogHelper object. The only log that needs to be included is the log
+   * that issued the SCT. Furthermore, the only fields used are the logId and
+   * the public key of the log.
+   * @return {Promise.<Boolean>} A promise that is resolved with the result of
    * the verification.
    */
   static verifySCTInclusion(sct, ctLogs) {
-    const logHelper = new CTLogHelper(ctLogs);
+    let logHelper;
+
+    if(ctLogs instanceof CTLogHelper) {
+      logHelper = ctLogs;
+    } else if(ctLogs instanceof Array) {
+      logHelper = new CTLogHelper(ctLogs);
+    } else {
+      return Promise.reject(new Error('Unkown ctlogs type'));
+    }
 
     const log = logHelper.findById(sct.logId);
     if(log === null)

@@ -49,7 +49,7 @@ export default class CTLog {
    * @param {ArrayBuffer} logId - The log id.
    * @param {number} maximumMergeDelay - The maximum merge delay.
    * @param {string} description - The description of the log.
-   * @param {Array<string>} operators - The operators of the log.
+   * @param {Array.<string>} operators - The operators of the log.
    */
   constructor(url, pubKey, version = Version.v1, logId = null,
     maximumMergeDelay = 0, description = null, operators = null) {
@@ -98,7 +98,7 @@ export default class CTLog {
    * @param {string} algorithmOID - The OID of the algorithm used for signing.
    * If this is null, then a heuristic method based on the key size will
    * be used.
-   * @return {Promise<Boolean>} The result of the generation. This will
+   * @return {Promise.<Boolean>} The result of the generation. This will
    * normally be true, and it's used to notify that the calculation has
    * finished.
    */
@@ -162,10 +162,10 @@ export default class CTLog {
 
   /**
    * Add a certificate.
-   * @param {Array<pkijs.Certificate>} certs - A list of certificates. The first
+   * @param {Array.<pkijs.Certificate>} certs - A list of certificates. The first
    * certificate is the end-entity certificate to be added, the second chains to
    * the first and so on (please check RFC6962 section 4.1).
-   * @return {Promise<SignedCertificateTimestamp>} A promise that is resolved
+   * @return {Promise.<SignedCertificateTimestamp>} A promise that is resolved
    * with the SCT.
    */
   addCertChain(certs) {
@@ -203,10 +203,10 @@ export default class CTLog {
 
   /**
    * Add a precertificate.
-   * @param {Array<pkijs.Certificate>} precerts - A list of certificates. The
+   * @param {Array.<pkijs.Certificate>} precerts - A list of certificates. The
    * first should be the precertificate to be added, the second chains to
    * the first and so on (please check RFC6962 section 4.1).
-   * @return {Promise<SignedCertificateTimestamp>} A promise that is resolved
+   * @return {Promise.<SignedCertificateTimestamp>} A promise that is resolved
    * with the SCT.
    */
   addPreCertChain(certs) {
@@ -244,7 +244,7 @@ export default class CTLog {
 
   /**
    * Get the SignedTreeHead.
-   * @return {Promise<SignedTreeHead>} A promise that is resolved with the
+   * @return {Promise.<SignedTreeHead>} A promise that is resolved with the
    * SignedTreeHead.
    */
   getSTH() {
@@ -270,18 +270,38 @@ export default class CTLog {
 
   /**
    * Get the consistency proof between two signed tree heads.
-   * @param {number} first - The tree size of the first signed tree head.
-   * @param {number} second - The tree size of the second signed tree head.
-   * @return {Promise<Array<ArrayBuffer>>} A Promise than is resolved with an
+   * @param {(number|SignedTreeHead)} first - The first signed tree head or its
+   * size.
+   * @param {(number|SignedTreeHead)} second - The second signed tree head or
+   * its size.
+   * @return {Promise.<Array<ArrayBuffer>>} A Promise than is resolved with an
    * array of ArrayBuffers containing the proofs.
    */
   getSTHConsistency(first, second) {
+    let firstSize, secondSize;
+
+    if(first instanceof SignedTreeHead) {
+      firstSize = first.treeSize;
+    } else if(typeof first === 'number') {
+      firstSize = first;
+    } else {
+      return Promise.reject(new Error('Unknown first head type'));
+    }
+
+    if(second instanceof SignedTreeHead) {
+      secondSize = second.treeSize;
+    } else if(typeof second === 'number') {
+      secondSize = second;
+    } else {
+      return Promise.reject(new Error('Unknown second head type'));
+    }
+
     const options = {
       url: this.getBaseUrl() + '/get-sth-consistency',
       json: true,
       qs: {
-        first,
-        second
+        firstSize,
+        secondSize
       }
     };
 
@@ -301,12 +321,23 @@ export default class CTLog {
 
   /**
    * Get merkle audit proof by leaf hash.
-   * @param {number} treeSize - The tree size on which to base the proof.
+   * @param {(number|SignedTreeHead)} sth - The signed tree head or the tree
+   * size on which to base the proof.
    * @param {ArrayBuffer} hash - The leaf hash.
-   * @return {Promise<AuditProof>} A promise that is resolved with the audit
+   * @return {Promise.<AuditProof>} A promise that is resolved with the audit
    * proof.
    */
-  getProofByHash(treeSize, hash) {
+  getProofByHash(sth, hash) {
+    let treeSize;
+
+    if(sth instanceof SignedTreeHead) {
+      treeSize = sth.treeSize;
+    } else if(typeof sth === 'number') {
+      treeSize = sth;
+    } else {
+      return Promise.reject(new Error('Unknown signed tree head type'));
+    }
+
     const options = {
       url: this.getBaseUrl() + '/get-proof-by-hash',
       json: true,
@@ -334,20 +365,21 @@ export default class CTLog {
 
   /**
    * Get merkle audit proof by leaf hash.
-   * @param {number} treeSize - The tree size on which to base the proof
+   * @param {(number|SignedTreeHead)} sth - The signed tree head or the tree
+   * size on which to base the proof.
    * @param {MerkleTreeLeaf} leaf - The merkle tree leaf.
-   * @return {Promise<AuditProof>} A promise that is resolved with the audit
+   * @return {Promise.<AuditProof>} A promise that is resolved with the audit
    * proof.
    */
-  getProofByLeaf(treeSize, leaf) {
-    return leaf.getHash().then(h => this.getProofByHash(treeSize, h));
+  getProofByLeaf(sth, leaf) {
+    return leaf.getHash().then(h => this.getProofByHash(sth, h));
   }
 
   /**
    * Get entries from the log.
    * @param {number} start - The index of the first entry.
    * @param {number} end - The index of the last entry.
-   * @return {Promise<Array<LogEntry>>} A promise that is resolved with an
+   * @return {Promise.<Array<LogEntry>>} A promise that is resolved with an
    * array of MerkleTreeLeaf structures.
    */
   getEntries(start, end) {
@@ -385,7 +417,7 @@ export default class CTLog {
 
   /**
    * Get accepted roots.
-   * @return {Promise<Array<pkijs.Certificate>>} An array of certificates.
+   * @return {Promise.<Array<pkijs.Certificate>>} An array of certificates.
    */
   getRoots() {
     const options = {
@@ -412,11 +444,22 @@ export default class CTLog {
 
   /**
    * Get an entry from the log and the audit path.
-   * @param {number} treeSize - The tree size on which to base the proof.
+   * @param {(number|SignedTreeHead)} sth - The signed tree head or the tree
+   * size on which to base the proof.
    * @param {number} index - The index of the entry.
-   * @return {LogEntryAndProof} The log entry with the audit path.
+   * @return {Promise.<LogEntryAndProof>} The log entry with the audit path.
    */
-  getEntryAndProof(treeSize, index) {
+  getEntryAndProof(sth, index) {
+    let treeSize;
+
+    if(sth instanceof SignedTreeHead) {
+      treeSize = sth.treeSize;
+    } else if(typeof sth === 'number') {
+      treeSize = sth;
+    } else {
+      return Promise.reject(new Error('Unknown signed tree head type'));
+    }
+
     const options = {
       url: this.getBaseUrl() + '/get-entry-and-proof',
       json: true,

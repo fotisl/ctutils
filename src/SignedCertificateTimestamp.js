@@ -8,6 +8,7 @@
 
 import * as pkijs from 'pkijs';
 import * as asn1js from 'asn1js';
+import CTLog from './CTLog';
 import { LogEntryType, SignatureType } from './Enums';
 import { uint64ToArrayBuffer, arrayBufferToUint64 } from './Common';
 
@@ -135,11 +136,21 @@ export default class SignedCertificateTimestamp {
 
   /**
    * Verify the signature of an SCT.
-   * @param {ArrayBuffer} pubKey - The public key of the log.
-   * @return {Promise<Boolean>} A promise that is resolved with the result
+   * @param {(ArrayBuffer|CTLog)} log - The public key of the log as an
+   * ArrayBuffer, or a CTLog object.
+   * @return {Promise.<Boolean>} A promise that is resolved with the result
    * of the verification.
    */
-  verify(pubKey) {
+  verify(log) {
+    let pubKey;
+    if(log instanceof CTLog) {
+      pubKey = log.pubKey;
+    } else if(log instanceof ArrayBuffer) {
+      pubKey = log;
+    } else {
+      return Promise.reject(new Error('Unknown key type'));
+    }
+
     let sequence = Promise.resolve();
     const signatureView = new Uint8Array(this.signature);
 

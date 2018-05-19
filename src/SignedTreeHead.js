@@ -8,6 +8,7 @@
 
 import * as pkijs from 'pkijs';
 import * as asn1js from 'asn1js';
+import CTLog from './CTLog';
 import { SignatureType } from './Enums';
 import { uint64ToArrayBuffer } from './Common';
 
@@ -53,11 +54,21 @@ export default class SignedTreeHead {
 
   /**
    * Verify the signature of an SignedTreeHead.
-   * @param {ArrayBuffer} pubKey - The public key of the log.
-   * @return {Promise<Boolean>} A promise that is resolved with the result
+   * @param {(ArrayBuffer|CTLog)} log - The public key of the log as an
+   * ArrayBuffer, or a CTLog object.
+   * @return {Promise.<Boolean>} A promise that is resolved with the result
    * of the verification.
    */
-  verify(pubKey) {
+  verify(log) {
+    let pubKey;
+    if(log instanceof CTLog) {
+      pubKey = log.pubKey;
+    } else if(log instanceof ArrayBuffer) {
+      pubKey = log;
+    } else {
+      return Promise.reject(new Error('Unknown key type'));
+    }
+
     let sequence = Promise.resolve();
     const signatureView = new Uint8Array(this.signature);
 
@@ -143,8 +154,8 @@ export default class SignedTreeHead {
   /**
    * Verify consistency between two Signed Tree Heads.
    * @param {SignedTreeHead} second - The second SignedTreeHead.
-   * @param {Array<ArrayBuffer>} proofs - The consistency proofs.
-   * @return {Promise<Boolean>} A promise that is resolved with the
+   * @param {Array.<ArrayBuffer>} proofs - The consistency proofs.
+   * @return {Promise.<Boolean>} A promise that is resolved with the
    * result of the consistency verification.
    */
   verifyConsistency(second, proofs) {
@@ -193,28 +204,34 @@ export default class SignedTreeHead {
       return [ oldHash, newHash ];
     };
 
-    if(second.treeSize < this.treeSize)
-      return Promise.reject(new Error('Second tree is smaller than first'));
+    let oldSTH, newSTH;
+    if(this.timestamp < second.timestamp) {
+      oldSTH = this;
+      newSTH = second;
+    } else {
+      oldSTH = second;
+      newSTH = this;
+    }
 
-    if(second.timestamp < this.timestamp)
-      return Promise.reject(new Error('Second timestamp is less than first'));
+    if(oldSTH.treeSize > newSTH.treeSize)
+      return Promise.reject(new Error('Older tree is smaller than first'));
 
     /**
-     * If the first tree is empty or has the same number of elements with the
-     * second we assume it's valid.
+     * If the old tree is empty or has the same number of elements with the
+     * new we assume it's valid.
      */
-    if(this.treeSize === 0)
+    if(oldSTH.treeSize === 0)
       return Promise.resolve(true);
 
-    if(this.treeSize === second.treeSize) {
-      const firstRootHashView = new Uint8Array(this.rootHash);
-      const secondRootHashView = new Uint8Array(second.rootHash);
+    if(oldSTH.treeSize === newSTH.treeSize) {
+      const oldRootHashView = new Uint8Array(oldSTH.rootHash);
+      const newRootHashView = new Uint8Array(newSTH.rootHash);
 
-      if(firstRootHashView.length !== secondRootHashView.length)
+      if(oldRootHashView.length !== newRootHashView.length)
         return Promise.resolve(false);
 
-      for(let i = 0; i < firstRootHashView; i++)
-        if(firstRootHashView[i] !== secondRootHashView[i])
+      for(let i = 0; i < oldRootHashView; i++)
+        if(oldRootHashView[i] !== newRootHashView[i])
           return Promise.resolve(false);
 
       return Promise.resolve(true);
@@ -223,8 +240,8 @@ export default class SignedTreeHead {
     /* Calculate the expected size of the proof */
     let length = 0;
     let b = 0;
-    let m = this.treeSize;
-    let n = second.treeSize;
+    let m = oldSTH.treeSize;
+    let n = newSTH.treeSize;
 
     while(m !== n) {
       length++;
@@ -247,8 +264,8 @@ export default class SignedTreeHead {
 
     /* Start verification */
 
-    let node = this.treeSize - 1;
-    let lastNode = second.treeSize - 1;
+    let node = oldSTH.treeSize - 1;
+    let lastNode = newSTH.treeSize - 1;
 
     while((node % 2) > 0) {
       node = Math.floor(node / 2);
@@ -266,7 +283,7 @@ export default class SignedTreeHead {
       const h = proofArray.shift();
       sequence = Promise.resolve([h, h]);
     } else {
-      sequence = Promise.resolve([this.rootHash, this.rootHash]);
+      sequence = Promise.resolve([oldSTH.rootHash, oldSTH.rootHash]);
     }
 
     /**
@@ -308,8 +325,8 @@ export default class SignedTreeHead {
       const newHash = args[1];
       const oldHashView = new Uint8Array(oldHash);
       const newHashView = new Uint8Array(newHash);
-      const oldRootView = new Uint8Array(this.rootHash);
-      const newRootView = new Uint8Array(second.rootHash);
+      const oldRootView = new Uint8Array(oldSTH.rootHash);
+      const newRootView = new Uint8Array(newSTH.rootHash);
 
       if((oldHashView.length !== oldRootView.length) ||
         (newHashView.length !== newRootView.length))

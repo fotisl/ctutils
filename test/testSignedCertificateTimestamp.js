@@ -86,11 +86,23 @@ describe('SignedCertificateTimestamp', () => {
   });
 
   describe('#verify()', () => {
-    it('should verify correct SignedCertificateTimestamp', () => {
+    it('should verify correct SignedCertificateTimestamp with public key',
+      () => {
+        const sct = new CTUtils.SignedCertificateTimestamp(CTUtils.Version.v1,
+          logId, 1518094243621, new ArrayBuffer(0), sig, false, cert);
+
+        return sct.verify(pubKey).then((res) => {
+          assert.equal(res, true, 'Cannot verify');
+        });
+      });
+
+    it('should verify correct SignedCertificateTimestamp with CTLog', () => {
       const sct = new CTUtils.SignedCertificateTimestamp(CTUtils.Version.v1,
         logId, 1518094243621, new ArrayBuffer(0), sig, false, cert);
 
-      return sct.verify(pubKey).then((res) => {
+      const log = new CTUtils.CTLog('ct.googleapis.com/pilot/', pubKey);
+
+      return sct.verify(log).then((res) => {
         assert.equal(res, true, 'Cannot verify');
       });
     });

@@ -80,7 +80,7 @@ export default class MerkleTreeLeaf {
    * Get the hash of the leaf.
    * Per section 2.1 of RFC6962 to generate the hash of a leaf, a \x00 needs to
    * be prepended.
-   * @return {Promise<ArrayBuffer>} A Promise that is resolved with the hash of
+   * @return {Promise.<ArrayBuffer>} A Promise that is resolved with the hash of
    * the leaf.
    */
   getHash() {
@@ -102,9 +102,9 @@ export default class MerkleTreeLeaf {
    * @param {SignedTreeHead} sth - The SignedTreeHead against which the check
    * will be made.
    * @param {number} index - The index of the leaf in the tree.
-   * @param {Array<ArrayBuffer>} auditPath - The audit path.
+   * @param {Array.<ArrayBuffer>} auditPath - The audit path.
    * @param {ArrayBuffer} hash - The hash of the leaf.
-   * @return {Promise<Boolean>} A promise that is resolved with the result
+   * @return {Promise.<Boolean>} A promise that is resolved with the result
    * of the inclusion verification.
    */
   static verifyInclusionByHash(sth, index, auditPath, hash) {
@@ -195,8 +195,8 @@ export default class MerkleTreeLeaf {
    * @param {SignedTreeHead} sth - The SignedTreeHead against which the check
    * will be made.
    * @param {number} index - The index of the leaf in the tree.
-   * @param {Array<ArrayBuffer>} auditPath - The audit path.
-   * @return {Promise<Boolean>} A promise that is resolved with the result
+   * @param {Array.<ArrayBuffer>} auditPath - The audit path.
+   * @return {Promise.<Boolean>} A promise that is resolved with the result
    * of the inclusion verification.
    */
   verifyInclusion(sth, index, auditPath) {
