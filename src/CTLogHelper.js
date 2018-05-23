@@ -7,9 +7,9 @@
  */
 
 import * as pvutils from 'pvutils';
-import * as rp from 'request-promise-native';
 import CTLog from './CTLog';
 import { Version } from './Enums';
+import { getFetch } from './Engines';
 
 /**
  * CTLogHelper class
@@ -33,9 +33,10 @@ export default class CTLogHelper {
    * the file parsing.
    */
   fetch(url) {
-    return rp.get({
-      url: url,
-      json: true
+    return getFetch()(url).then(res => {
+      if(!res.ok)
+        return Promise.reject(new Error(`Error: ${res.statusText}`));
+      return res.json();
     }).then(res => {
       let ret = true;
       let operatorList = {};

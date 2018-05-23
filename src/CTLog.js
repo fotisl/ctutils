@@ -9,11 +9,12 @@
 import * as pkijs from 'pkijs';
 import * as asn1js from 'asn1js';
 import * as pvutils from 'pvutils';
-import * as rp from 'request-promise-native';
 import MerkleTreeLeaf from './MerkleTreeLeaf';
 import SignedCertificateTimestamp from './SignedCertificateTimestamp';
 import SignedTreeHead from './SignedTreeHead';
 import { Version, LogEntryType } from './Enums';
+import { paramsToQueryString } from './Common';
+import { getFetch } from './Engines';
 
 /**
  * An audit proof.
@@ -162,9 +163,9 @@ export default class CTLog {
 
   /**
    * Add a certificate.
-   * @param {Array.<pkijs.Certificate>} certs - A list of certificates. The first
-   * certificate is the end-entity certificate to be added, the second chains to
-   * the first and so on (please check RFC6962 section 4.1).
+   * @param {Array.<pkijs.Certificate>} certs - A list of certificates. The
+   * first certificate is the end-entity certificate to be added, the second
+   * chains to the first and so on (please check RFC6962 section 4.1).
    * @return {Promise.<SignedCertificateTimestamp>} A promise that is resolved
    * with the SCT.
    */
@@ -176,15 +177,19 @@ export default class CTLog {
       encCerts.push(pvutils.toBase64(pvutils.arrayBufferToString(schema)));
     });
 
-    const options = {
-      url: this.getBaseUrl() + '/add-chain',
-      json: true,
-      body: {
+    let sequence = getFetch()(this.getBaseUrl() + '/add-chain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         chain: encCerts
-      }
-    };
+      })
+    });
 
-    let sequence = rp.post(options);
+    sequence = sequence.then(res => {
+      if(!res.ok)
+        return Promise.reject(new Error(`Error: ${res.statusText}`));
+      return res.json();
+    });
 
     sequence = sequence.then(res => {
       const logId = pvutils.stringToArrayBuffer(pvutils.fromBase64(res.id));
@@ -217,15 +222,19 @@ export default class CTLog {
       encCerts.push(pvutils.toBase64(pvutils.arrayBufferToString(schema)));
     });
 
-    const options = {
-      url: this.getBaseUrl() + '/add-pre-chain',
-      json: true,
-      body: {
+    let sequence = getFetch()(this.getBaseUrl() + '/add-pre-chain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         chain: encCerts
-      }
-    };
+      })
+    });
 
-    let sequence = rp.post(options);
+    sequence = sequence.then(res => {
+      if(!res.ok)
+        return Promise.reject(new Error(`Error: ${res.statusText}`));
+      return res.json();
+    });
 
     sequence = sequence.then(res => {
       const logId = pvutils.stringToArrayBuffer(pvutils.fromBase64(res.id));
@@ -248,12 +257,13 @@ export default class CTLog {
    * SignedTreeHead.
    */
   getSTH() {
-    const options = {
-      url: this.getBaseUrl() + '/get-sth',
-      json: true
-    };
+    let sequence = getFetch()(this.getBaseUrl() + '/get-sth');
 
-    let sequence = rp.get(options);
+    sequence = sequence.then(res => {
+      if(!res.ok)
+        return Promise.reject(new Error(`Error: ${res.statusText}`));
+      return res.json();
+    });
 
     sequence = sequence.then(res => {
       const rootHash = pvutils.stringToArrayBuffer(
@@ -296,16 +306,19 @@ export default class CTLog {
       return Promise.reject(new Error('Unknown second head type'));
     }
 
-    const options = {
-      url: this.getBaseUrl() + '/get-sth-consistency',
-      json: true,
-      qs: {
-        firstSize,
-        secondSize
-      }
+    const params = {
+      first: firstSize,
+      second: secondSize
     };
 
-    let sequence = rp.get(options);
+    const url = this.getBaseUrl() + '/get-sth-consistency?' +
+      paramsToQueryString(params);
+
+    let sequence = getFetch()(url).then(res => {
+      if(!res.ok)
+        return Promise.reject(new Error(`Error: ${res.statusText}`));
+      return res.json();
+    });
 
     sequence = sequence.then(res => {
       const cons = [];
@@ -338,16 +351,19 @@ export default class CTLog {
       return Promise.reject(new Error('Unknown signed tree head type'));
     }
 
-    const options = {
-      url: this.getBaseUrl() + '/get-proof-by-hash',
-      json: true,
-      qs: {
-        tree_size: treeSize,
-        hash: pvutils.toBase64(pvutils.arrayBufferToString(hash))
-      }
+    const params = {
+      tree_size: treeSize,
+      hash: pvutils.toBase64(pvutils.arrayBufferToString(hash))
     };
 
-    let sequence = rp.get(options);
+    const url = this.getBaseUrl() + '/get-proof-by-hash?' +
+      paramsToQueryString(params);
+
+    let sequence = getFetch()(url).then(res => {
+      if(!res.ok)
+        return Promise.reject(new Error(`Error: ${res.statusText}`));
+      return res.json();
+    });
 
     sequence = sequence.then(res => {
       const auditPath = [];
@@ -383,16 +399,19 @@ export default class CTLog {
    * array of MerkleTreeLeaf structures.
    */
   getEntries(start, end) {
-    const options = {
-      url: this.getBaseUrl() + '/get-entries',
-      json: true,
-      qs: {
-        start,
-        end
-      }
+    const params = {
+      start,
+      end
     };
 
-    let sequence = rp.get(options);
+    const url = this.getBaseUrl() + '/get-entries?' +
+      paramsToQueryString(params);
+
+    let sequence = getFetch()(url).then(res => {
+      if(!res.ok)
+        return Promise.reject(new Error(`Error: ${res.statusText}`));
+      return res.json();
+    });
 
     sequence = sequence.then(res => {
       const entries = [];
@@ -420,12 +439,13 @@ export default class CTLog {
    * @return {Promise.<Array<pkijs.Certificate>>} An array of certificates.
    */
   getRoots() {
-    const options = {
-      url: this.getBaseUrl() + '/get-roots',
-      json: true
-    };
+    let sequence = getFetch()(this.getBaseUrl() + '/get-roots');
 
-    let sequence = rp.get(options);
+    sequence = sequence.then(res => {
+      if(!res.ok)
+        return Promise.reject(new Error(`Error: ${res.statusText}`));
+      return res.json();
+    });
 
     sequence = sequence.then(res => {
       const certs = [];
@@ -460,16 +480,19 @@ export default class CTLog {
       return Promise.reject(new Error('Unknown signed tree head type'));
     }
 
-    const options = {
-      url: this.getBaseUrl() + '/get-entry-and-proof',
-      json: true,
-      qs: {
-        leaf_index: index,
-        tree_size: treeSize
-      }
+    const params = {
+      leaf_index: index,
+      tree_size: treeSize
     };
 
-    let sequence = rp.get(options);
+    const url = this.getBaseUrl() + '/get-entry-and-proof?' +
+      paramsToQueryString(params);
+
+    let sequence = getFetch()(url).then(res => {
+      if(!res.ok)
+        return Promise.reject(new Error(`Error: ${res.statusText}`));
+      return res.json();
+    });
 
     sequence = sequence.then(res => {
       const leafData = pvutils.stringToArrayBuffer(pvutils.fromBase64(

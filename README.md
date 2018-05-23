@@ -20,6 +20,19 @@ Use:
 
 to generate the documentation
 
+# Requirements
+
+If running under node, you will need a fetch and a webcrypto polyfill, such as node-fetch and node-webcrypto-ossl. After importing them, you need to set both engines using setFetch and setWebCrypto. As an example, you can use the following:
+
+    const fetch = require('node-fetch');
+    const WebCrypto = require('node-webcrypto-ossl');
+    const CTUtils = require('ctutils');
+
+    const webcrypto = new WebCrypto();
+
+    CTUtils.setFetch(fetch);
+    CTUtils.setWebCrypto(webcrypto);
+
 # Usage
 
 For the moment, you can see the generated documentation for sample usage.

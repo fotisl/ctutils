@@ -5,5 +5,8 @@ module.exports = {
     "curly": 0,
     "keyword-spacing": 0,
     "space-before-function-paren": 0,
+  },
+  "globals": {
+    "self": true
   }
 };

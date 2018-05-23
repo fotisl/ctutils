@@ -36,3 +36,13 @@ export function arrayBufferToUint64(buf) {
 
   return ret;
 }
+
+/**
+ * Create a query string from an object with parameters.
+ * @param {Object} params - The object with the parameters.
+ * @return {string} The resulting string.
+ */
+export function paramsToQueryString(params) {
+  return Object.keys(params).map(k =>
+    encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
+}

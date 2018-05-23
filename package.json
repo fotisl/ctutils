@@ -30,11 +30,10 @@
   "homepage": "https://github.com/fotisl/ctutils#readme",
   "dependencies": {
     "asn1js": "^2.0.19",
+    "node-fetch": "^2.1.2",
     "node-webcrypto-ossl": "^1.0.36",
     "pkijs": "^2.1.46",
-    "pvutils": "^1.0.12",
-    "request": "^2.85.0",
-    "request-promise-native": "^1.0.5"
+    "pvutils": "^1.0.12"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
