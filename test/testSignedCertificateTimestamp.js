@@ -37,7 +37,8 @@ describe('SignedCertificateTimestamp', () => {
   describe('#toBinary()', () => {
     it('should encode correctly', () => {
       const sct = new CTUtils.SignedCertificateTimestamp(CTUtils.Version.v1,
-        logId, 1518094243621, new ArrayBuffer(0), sig, false, cert);
+        logId, 1518094243621, new ArrayBuffer(0), sig,
+        CTUtils.LogEntryType.x509_entry, cert.buffer);
 
       const sctVerify = new Uint8Array(sct.toBinary());
 
@@ -89,7 +90,8 @@ describe('SignedCertificateTimestamp', () => {
     it('should verify correct SignedCertificateTimestamp with public key',
       () => {
         const sct = new CTUtils.SignedCertificateTimestamp(CTUtils.Version.v1,
-          logId, 1518094243621, new ArrayBuffer(0), sig, false, cert);
+          logId, 1518094243621, new ArrayBuffer(0), sig,
+          CTUtils.LogEntryType.x509_entry, cert);
 
         return sct.verify(pubKey).then((res) => {
           assert.equal(res, true, 'Cannot verify');
@@ -98,7 +100,8 @@ describe('SignedCertificateTimestamp', () => {
 
     it('should verify correct SignedCertificateTimestamp with CTLog', () => {
       const sct = new CTUtils.SignedCertificateTimestamp(CTUtils.Version.v1,
-        logId, 1518094243621, new ArrayBuffer(0), sig, false, cert);
+        logId, 1518094243621, new ArrayBuffer(0), sig,
+        CTUtils.LogEntryType.x509_entry, cert);
 
       const log = new CTUtils.CTLog('ct.googleapis.com/pilot/', pubKey);
 
