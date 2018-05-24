@@ -31,7 +31,8 @@
   "dependencies": {
     "asn1js": "^2.0.19",
     "pkijs": "^2.1.46",
-    "pvutils": "^1.0.12"
+    "pvutils": "^1.0.12",
+    "webworker-threads": "^0.7.13"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

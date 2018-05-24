@@ -9,6 +9,10 @@ require('babel-polyfill');
 const assert = require('assert');
 const pvutils = require('pvutils');
 const CTUtils = require('..');
+const WebCrypto = require('node-webcrypto-ossl');
+
+const webcrypto = new WebCrypto();
+CTUtils.setWebCrypto(webcrypto);
 
 const url = 'ct.googleapis.com/pilot/';
 const pubKey = pvutils.stringToArrayBuffer(pvutils.fromBase64(

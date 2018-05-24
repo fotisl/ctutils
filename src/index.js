@@ -5,8 +5,6 @@
  * @module ctutils
  */
 
-import './webcrypto';
-
 import CertHelper from './CertHelper';
 import CTLog from './CTLog';
 import CTLogHelper from './CTLogHelper';

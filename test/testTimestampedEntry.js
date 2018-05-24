@@ -9,6 +9,10 @@ require('babel-polyfill');
 const assert = require('assert');
 const fs = require('fs');
 const CTUtils = require('..');
+const WebCrypto = require('node-webcrypto-ossl');
+
+const webcrypto = new WebCrypto();
+CTUtils.setWebCrypto(webcrypto);
 
 const certBuffer = fs.readFileSync('test/cert.der');
 const certBin = new Uint8Array(certBuffer);

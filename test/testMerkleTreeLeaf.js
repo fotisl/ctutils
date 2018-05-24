@@ -10,6 +10,10 @@ const assert = require('assert');
 const fs = require('fs');
 const pvutils = require('pvutils');
 const CTUtils = require('..');
+const WebCrypto = require('node-webcrypto-ossl');
+
+const webcrypto = new WebCrypto();
+CTUtils.setWebCrypto(webcrypto);
 
 describe('MerkleTreeLeaf', () => {
   describe('#getHash()', () => {

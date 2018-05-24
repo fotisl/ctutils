@@ -10,6 +10,10 @@ const assert = require('assert');
 const fs = require('fs');
 const pvutils = require('pvutils');
 const CTUtils = require('..');
+const WebCrypto = require('node-webcrypto-ossl');
+
+const webcrypto = new WebCrypto();
+CTUtils.setWebCrypto(webcrypto);
 
 const issuerHash = new Uint8Array(pvutils.stringToArrayBuffer(
   pvutils.fromBase64('q9kHBA4OE40+HVkOIjyKiKBED3yDP/uskMLt3i9Z7e8=')));

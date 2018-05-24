@@ -10,6 +10,10 @@ const assert = require('assert');
 const fs = require('fs');
 const pvutils = require('pvutils');
 const CTUtils = require('..');
+const WebCrypto = require('node-webcrypto-ossl');
+
+const webcrypto = new WebCrypto();
+CTUtils.setWebCrypto(webcrypto);
 
 const logId = pvutils.stringToArrayBuffer(pvutils.fromBase64(
   'pFASaQVaFVReYhGrN7wQP2KuVXakXksXFEU+GyIQaiU='));
