@@ -205,7 +205,7 @@ export default class SignedTreeHead {
     };
 
     let oldSTH, newSTH;
-    if(this.timestamp < second.timestamp) {
+    if(this.timestamp <= second.timestamp) {
       oldSTH = this;
       newSTH = second;
     } else {
@@ -214,7 +214,7 @@ export default class SignedTreeHead {
     }
 
     if(oldSTH.treeSize > newSTH.treeSize)
-      return Promise.reject(new Error('Older tree is smaller than first'));
+      return Promise.reject(new Error('Older tree is bigger than first'));
 
     /**
      * If the old tree is empty or has the same number of elements with the

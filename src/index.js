@@ -8,6 +8,7 @@
 import CertHelper from './CertHelper';
 import CTLog from './CTLog';
 import CTLogHelper from './CTLogHelper';
+import CTMonitor from './CTMonitor';
 import { setFetch, getFetch, setWebCrypto, getWebCrypto } from './Engines';
 import { Version, LogEntryType, MerkleLeafType, SignatureType } from './Enums';
 import MerkleTreeLeaf from './MerkleTreeLeaf';
@@ -19,6 +20,7 @@ import TimestampedEntry from './TimestampedEntry';
 export { CertHelper };
 export { CTLog };
 export { CTLogHelper };
+export { CTMonitor };
 export { setFetch, getFetch, setWebCrypto, getWebCrypto };
 export { Version, LogEntryType, MerkleLeafType, SignatureType };
 export { MerkleTreeLeaf };
