@@ -27,16 +27,103 @@ import { getFetch } from './Engines';
  * An entry in the log.
  * @typedef {Object} LogEntry
  * @property {MerkleTreeLeaf} leaf - The merkle tree leaf.
- * @property {ArrayBuffer} extraData - The data pertaining to the entry.
+ * @property {Array.<pkijs.Certificate>} extraData - The data pertaining to
+ * the entry.
  */
 
 /**
  * An entry in the log and the audit proof.
  * @typedef {Object} LogEntryAndProof
  * @property {MerkleTreeLeaf} leaf - The merkle tree leaf.
- * @property {ArrayBuffer} extraData - The data pertaining to the entry.
+ * @property {Array.<pkijs.Certificate>} extraData - The data pertaining to
+ * the entry.
  * @property {Array<ArrayBuffer>} auditPath - The audit path.
  */
+
+/**
+ * Load a cert from an offset at an ArrayBuffer, with it's length prepended.
+ * @param {ArrayBuffer} buffer - The buffer with the certificate.
+ * @param {number} offset - The offset to start looking for the certificate.
+ * @return {Object} An object with a length member containing the length of
+ * the certificate and a certificate object with the actual certificate.
+ */
+function extractCert(buffer, offset) {
+  const bufferView = new Uint8Array(buffer);
+
+  const length = (bufferView[offset] << 16) +
+    (bufferView[offset + 1] << 8) + bufferView[offset + 2];
+
+  let certificate;
+
+  try {
+    const asn1 = asn1js.fromBER(buffer.slice(offset + 3, offset + 3 + length));
+    certificate = new pkijs.Certificate({schema: asn1.result});
+  } catch(err) {
+    return {
+      length,
+      certificate: null
+    };
+  }
+
+  return {
+    length,
+    certificate
+  };
+}
+
+/**
+ * Parse extraData reply for a Certificate and return the chain.
+ * @param {ArrayBuffer} extraData - The extra data.
+ * @return {Array.<pkijs.Certificate>} An array of pkijs.Certificates.
+ */
+function parseCertExtraData(extraData) {
+  const extraDataView = new Uint8Array(extraData);
+
+  let offset = 3;
+  let certs = [];
+
+  while(offset < extraDataView.length) {
+    const res = extractCert(extraData, offset);
+
+    if(res.certificate !== null)
+      certs.push(res.certificate);
+
+    offset += (3 + res.length);
+  }
+
+  return certs;
+}
+
+/**
+ * Parse extraData reply for a Precertificate and return the chain.
+ * @param {ArrayBuffer} extraData - The extra data.
+ * @return {Array.<pkijs.Certificate>} An array of pkijs.Certificates.
+ */
+function parsePrecertExtraData(extraData) {
+  const extraDataView = new Uint8Array(extraData);
+
+  let offset = 0;
+  let certs = [];
+
+  let res = extractCert(extraData, offset);
+  if(res.certificate !== null)
+    certs.push(res.certificate);
+  offset += (3 + res.length);
+
+  /* Move on to the chain */
+  offset += 3;
+
+  while(offset < extraDataView.length) {
+    res = extractCert(extraData, offset);
+
+    if(res.certificate !== null)
+      certs.push(res.certificate);
+
+    offset += (3 + res.length);
+  }
+
+  return certs;
+}
 
 /**
  * CTLog class
@@ -419,11 +506,17 @@ export default class CTLog {
       res.entries.forEach(entry => {
         const leafData = pvutils.stringToArrayBuffer(pvutils.fromBase64(
           entry.leaf_input));
-        const extraData = pvutils.stringToArrayBuffer(pvutils.fromBase64(
-          entry.extra_data));
+        const leaf = MerkleTreeLeaf.fromBinary(leafData);
+        let extraData;
+        if(leaf.timestampedEntry.type === LogEntryType.x509_entry)
+          extraData = parseCertExtraData(pvutils.stringToArrayBuffer(
+            pvutils.fromBase64(entry.extra_data)));
+        else
+          extraData = parsePrecertExtraData(pvutils.stringToArrayBuffer(
+            pvutils.fromBase64(entry.extra_data)));
 
         entries.push({
-          leaf: MerkleTreeLeaf.fromBinary(leafData),
+          leaf,
           extraData
         });
       });
@@ -497,8 +590,14 @@ export default class CTLog {
     sequence = sequence.then(res => {
       const leafData = pvutils.stringToArrayBuffer(pvutils.fromBase64(
         res.leaf_input));
-      const extraData = pvutils.stringToArrayBuffer(pvutils.fromBase64(
-        res.extra_data));
+      const leaf = MerkleTreeLeaf.fromBinary(leafData);
+      let extraData;
+      if(leaf.timestampedEntry.type === LogEntryType.x509_entry)
+        extraData = parseCertExtraData(pvutils.stringToArrayBuffer(
+          pvutils.fromBase64(entry.extra_data)));
+      else
+        extraData = parsePrecertExtraData(pvutils.stringToArrayBuffer(
+          pvutils.fromBase64(entry.extra_data)));
       const auditPath = [];
 
       res.audit_path.forEach(p => {
@@ -506,7 +605,7 @@ export default class CTLog {
       });
 
       return {
-        leaf: MerkleTreeLeaf.fromBinary(leafData),
+        leaf,
         extraData,
         auditPath
       };
