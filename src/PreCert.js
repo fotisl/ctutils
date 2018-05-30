@@ -39,16 +39,17 @@ export default class PreCert {
     const issuerHashView = new Uint8Array(this.issuerHash);
     const tbsView = new Uint8Array(this.tbs);
 
-    const preCertLen = 32 + 2 + tbsView.length;
+    const preCertLen = 32 + 3 + tbsView.length;
     const preCert = new ArrayBuffer(preCertLen);
     const preCertView = new Uint8Array(preCert);
 
     preCertView.set(issuerHashView);
 
-    preCertView[32] = (tbsView.length >> 8) & 0xff;
-    preCertView[33] = tbsView.length & 0xff;
+    preCertView[32] = (tbsView.length >> 16) & 0xff
+    preCertView[33] = (tbsView.length >> 8) & 0xff
+    preCertView[34] = tbsView.length & 0xff
 
-    preCertView.set(tbsView, 34);
+    preCertView.set(tbsView, 35);
 
     return preCertView;
   }
@@ -60,6 +61,6 @@ export default class PreCert {
    */
   static fromBinary(preCertBin) {
     return new PreCert(preCertBin.slice(0, 32),
-      preCertBin.slice(34));
+      preCertBin.slice(35));
   }
 }
