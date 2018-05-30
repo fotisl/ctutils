@@ -125,7 +125,7 @@ export default class CTMonitor {
     this.log.getSTH().then(sth => {
       this.previousSTH = sth;
       this.timer = setInterval(this.monitorChange.bind(this), this.timerInterval);
-    }).catch(e => console.log(e));
+    });
   }
 
   /**
