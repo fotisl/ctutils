@@ -594,10 +594,10 @@ export default class CTLog {
       let extraData;
       if(leaf.timestampedEntry.type === LogEntryType.x509_entry)
         extraData = parseCertExtraData(pvutils.stringToArrayBuffer(
-          pvutils.fromBase64(entry.extra_data)));
+          pvutils.fromBase64(res.extra_data)));
       else
         extraData = parsePrecertExtraData(pvutils.stringToArrayBuffer(
-          pvutils.fromBase64(entry.extra_data)));
+          pvutils.fromBase64(res.extra_data)));
       const auditPath = [];
 
       res.audit_path.forEach(p => {
