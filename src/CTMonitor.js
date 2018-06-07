@@ -6,6 +6,8 @@
  * @module ctutils
  */
 
+import CompactMerkleTree from './CompactMerkleTree';
+
 /**
  * A callback that is provided with the results of a verification.
  * @callback sthVerificationCallback
@@ -151,9 +153,8 @@ export default class CTMonitor {
       this.verifySTHConsistencyCallback(result, this.previousSTH, newSTH);
     }
 
-    if(this.fetchNewCertificates) {
-      let certs = [];
-
+    let certs = [];
+    if(this.fetchNewCertificates || this.verify) {
       let start = this.previousSTH.treeSize;
       let end = newSTH.treeSize - 1;
       let left = end - start + 1
@@ -163,11 +164,46 @@ export default class CTMonitor {
         certs = certs.concat(newCerts);
         left -= newCerts.length;
       }
-      this.fetchNewCertificatesCallback(certs);
     }
 
+    if(this.fetchNewCertificates)
+      this.fetchNewCertificatesCallback(certs);
+
     if(this.verifyTree) {
-      /* TODO: implement tree checking */
+      const lastEntryAndProof = await this.log.getEntryAndProof(
+        this.previousSTH, this.previousSTH.treeSize - 1);
+      const auditPath = lastEntryAndProof.auditPath;
+      const node = lastEntryAndProof.leaf;
+
+      const cmt = new CompactMerkleTree();
+
+      let res = await cmt.init(this.previousSTH.rootHash, auditPath, node,
+        this.previousSTH.treeSize);
+
+      if(res === false) {
+        this.verifyTreeCallback(false, this.previousSTH, newSTH);
+      } else {
+        for(let i = 0; i < certs.length; i++)
+          await cmt.addLeaf(certs[i].leaf);
+
+        const verifyRoot = await cmt.calculateRoot();
+        const newRootView = new Uint8Array(newSTH.rootHash);
+        const verifyRootView = new Uint8Array(verifyRoot);
+
+        if(newRootView.length !== verifyRootView.length) {
+          this.verifyTreeCallback(false, this.previousSTH, newSTH);
+        } else {
+          let idx = 0;
+          for(idx = 0; idx < newRootView.length; idx++) {
+            if(newRootView[idx] !== verifyRootView[idx]) {
+              this.verifyTreeCallback(false, this.previousSTH, newSTH);
+              break;
+            }
+          }
+          if(idx === newRootView.length)
+            this.verifyTreeCallback(true, this.previousSTH, newSTH);
+        }
+      }
     }
 
     this.previousSTH = newSTH;

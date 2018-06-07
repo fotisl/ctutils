@@ -6,6 +6,7 @@
  */
 
 import CertHelper from './CertHelper';
+import CompactMerkleTree from './CompactMerkleTree';
 import CTLog from './CTLog';
 import CTLogHelper from './CTLogHelper';
 import CTMonitor from './CTMonitor';
@@ -18,6 +19,7 @@ import SignedTreeHead from './SignedTreeHead';
 import TimestampedEntry from './TimestampedEntry';
 
 export { CertHelper };
+export { CompactMerkleTree };
 export { CTLog };
 export { CTLogHelper };
 export { CTMonitor };
