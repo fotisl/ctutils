@@ -109,13 +109,13 @@ export default class TimestampedEntry {
       const certLen = (timestampedEntryBinView[10] << 16) +
         (timestampedEntryBinView[11] << 8) + timestampedEntryBinView[12];
       cert = timestampedEntryBinView.slice(13, 13 + certLen).buffer;
-      extensions = timestampedEntryBinView.slice(13 + certLen).buffer;
+      extensions = timestampedEntryBinView.slice(13 + 2 + certLen).buffer;
     } else {
       let preCertLen = 32;
       preCertLen += (timestampedEntryBinView[42] << 16) +
         (timestampedEntryBinView[43] << 8) + timestampedEntryBinView[44];
       cert = timestampedEntryBinView.slice(10, 10 + preCertLen).buffer;
-      extensions = timestampedEntryBinView.slice(10 + preCertLen).buffer;
+      extensions = timestampedEntryBinView.slice(10 + 2 + preCertLen).buffer;
     }
 
     return new TimestampedEntry(timestamp, type, cert, extensions);
