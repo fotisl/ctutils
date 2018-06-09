@@ -249,4 +249,44 @@ export default class SignedCertificateTimestamp {
 
     return sequence;
   }
+
+  /**
+   * Get the signature algorithm.
+   * @return {number} The signature algorithm of the digitally signed struct,
+   * as defined in RFC5246, i.e. 1 for RSA and 3 for ECDSA.
+   */
+  getSignatureAlgorithm() {
+    const signatureView = new Uint8Array(this.signature);
+
+    return signatureView[1];
+  }
+
+  /**
+   * Get the internal signature of the SCT.
+   * @return {ArrayBuffer} The internal signature of the digitally signed
+   * struct.
+   */
+  getInternalSignature() {
+    return this.signature.slice(4);
+  }
+
+  /**
+   * Set the signature of the SCT.
+   * @param {number} algorithm - The signature algorithm as defined in RFC5246.
+   * @param {ArrayBuffer} signature - The internal signature.
+   */
+  setSignature(algorithm, signature) {
+    const newSigView = new Uint8Array(signature);
+    this.signature = new ArrayBuffer(4 + newSigView.length);
+    const sigView = new Uint8Array(this.signature);
+
+    /* Hash algorithm is always SHA256 */
+    sigView[0] = 4;
+    sigView[1] = algorithm;
+    sigView[2] = (newSigView.length >> 8) & 0xff;
+    sigView[3] = newSigView.length & 0xff;
+
+    for(let i = 0; i < newSigView.length; i++)
+      sigView[4 + i] = newSigView[i];
+  }
 }
