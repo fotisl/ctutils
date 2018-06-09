@@ -137,7 +137,7 @@ export default class CompactMerkleTree {
 
   /**
    * Add a new leaf.
-   * @param {ArrayBuffer} leaf - The leaf to add.
+   * @param {MerkleTreeLeaf} leaf - The leaf to add.
    * @return {Promise.<Boolean>} A promise that is resolved with the result of
    * the operation. This is always true, but it is used since if we need to hash
    * something, we have an asynchronous operation.
