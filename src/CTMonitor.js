@@ -208,4 +208,52 @@ export default class CTMonitor {
 
     this.previousSTH = newSTH;
   }
+
+  /**
+   * Verify the whole tree of a log.
+   * Warning: this will download all entries from the log, and thus can
+   * generate a lot of traffic.
+   * @param {CTLog} log - The CT log.
+   * @param {Promise.<Boolean>} A Promise that resolves with the result of the
+   * validation.
+   */
+  static async verifyFullTree(log) {
+    const sth = await log.getSTH();
+
+    /**
+     * There is no need to initialize the CMT with init() since there are no
+     * nodes in the actual tree at this time.
+     */
+    const cmt = new CompactMerkleTree();
+
+    let start = 0;
+    let end = sth.treeSize - 1;
+    let left = sth.treeSize;
+
+    while(left > 0) {
+      const newCerts = await log.getEntries(end - left + 1, end);
+
+      for(let i = 0; i < newCerts.length; i++) {
+        let res = await cmt.addLeaf(newCerts[i].leaf);
+
+        if(res === false)
+          return false;
+      }
+
+      left -= newCerts.length;
+    }
+
+    const rootView = new Uint8Array(sth.rootHash);
+    const verifyRoot = await cmt.calculateRoot();
+    const verifyRootView = new Uint8Array(verifyRoot);
+
+    if(rootView.length !== verifyRootView.length)
+      return false;
+
+    for(let i = 0; i < rootView.length; i++)
+      if(rootView[i] !== verifyRootView[i])
+        return false;
+
+    return true;
+  }
 }
