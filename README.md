@@ -35,7 +35,14 @@ If running under node, you will need a fetch and a webcrypto polyfill, such as n
 
 # Usage
 
-For the moment, you can see the generated documentation for sample usage.
+Please see the generated documentation for sample usage.
+
+You can also check the examples in the examples/ folder.
+
+For HTML examples please check:
+
+* [Get CT log accepted roots](examples/html/GetRoots/index.html)
+* [Real-time fetching of logged certificates](examples/html/FetchNewCerts/index.html)
 
 # License
 
