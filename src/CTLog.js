@@ -29,6 +29,7 @@ import { getFetch } from './Engines';
  * @property {MerkleTreeLeaf} leaf - The merkle tree leaf.
  * @property {Array.<pkijs.Certificate>} extraData - The data pertaining to
  * the entry.
+ * @property {number} index - The index of the leaf in the tree.
  */
 
 /**
@@ -38,6 +39,7 @@ import { getFetch } from './Engines';
  * @property {Array.<pkijs.Certificate>} extraData - The data pertaining to
  * the entry.
  * @property {Array<ArrayBuffer>} auditPath - The audit path.
+ * @property {number} index - The index of the leaf in the tree.
  */
 
 /**
@@ -503,7 +505,8 @@ export default class CTLog {
     sequence = sequence.then(res => {
       const entries = [];
 
-      res.entries.forEach(entry => {
+      for(let i = 0; i < res.entries.length; i++) {
+        const entry = res.entries[i];
         const leafData = pvutils.stringToArrayBuffer(pvutils.fromBase64(
           entry.leaf_input));
         const leaf = MerkleTreeLeaf.fromBinary(leafData);
@@ -517,9 +520,10 @@ export default class CTLog {
 
         entries.push({
           leaf,
-          extraData
+          extraData,
+          index: start + i
         });
-      });
+      }
 
       return entries;
     });
@@ -607,7 +611,8 @@ export default class CTLog {
       return {
         leaf,
         extraData,
-        auditPath
+        auditPath,
+        index
       };
     });
 
