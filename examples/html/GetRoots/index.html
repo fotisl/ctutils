@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='utf-8' />
+        <title>CTUtils: Get CT log trusted roots</title>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js'></script>
+        <script src='bundle.js'></script>
+        <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css' />
+    </head>
+    <body>
+        <div style='width: 100%; text-align: center;'>
+            <label for='ctlog'>Select a log:</label>
+            <select name='ctlog' id='ctlog'>
+                <option value='---'>---</option>
+            </select>
+        </div>
+        <div id='results' style='padding-top: 50px; width: 100%;'>
+        </div>
+    </body>
+    <script>
+$(document).ready(function() {
+    $('#ctlog').selectmenu({
+        change: function(event, ui) {
+            var index = ui.item.index;
+
+            if(index == 0) {
+                $('#results').empty();
+                return;
+            }
+
+            $('#results').text('Fetching...');
+
+            log = $('#ctlog' + index);
+            ctBundle.getRoots({
+                url: log.attr('data-url'),
+                pubkey: log.attr('data-pubkey'),
+                version: parseInt(log.attr('data-version')),
+                logid: log.attr('data-logid'),
+                description: log.attr('data-description')
+            }).then(function(roots) {
+                acc = $('<div>', { id: 'accordion' });
+
+                roots.forEach(function(root) {
+                    title = $('<h3>');
+                    title.text(root.subject);
+
+                    pem = $('<div>');
+
+                    blob = new Blob([ root.pem ],
+                        { type: 'application/x-pem-file' });
+                    url = window.URL.createObjectURL(blob);
+                    pemdl = $('<a>', {
+                        href: url,
+                        target: '_blank',
+                        download: root.filename
+                    });
+                    pemdl.text('Download');
+                    pemdl.button();
+                    pem.append(pemdl);
+
+                    pempre = $('<pre>');
+                    pempre.text(root.pem);
+                    pem.append(pempre);
+
+                    acc.append(title);
+                    acc.append(pem);
+                });
+
+                acc.accordion({
+                    collapsible: true,
+                    heightStyle: 'content'
+                });
+
+                $('#results').empty();
+                $('#results').append(acc);
+            }).catch(function(e) {
+                $('#results').empty();
+                $('#results').html('Cannot fetch roots: ' + e);
+            });
+        }
+    });
+
+    ctBundle.getLogs().then(function(logs) {
+        var i = 1;
+        logs.forEach(function (log) {
+            sel = $('<option>');
+            sel.attr('id', 'ctlog' + i);
+            sel.attr('data-url', log.url);
+            sel.attr('data-pubkey', log.pubkey);
+            sel.attr('data-version', log.version);
+            sel.attr('data-logid', log.logid);
+            sel.attr('data-description', log.description);
+            sel.attr('data-operators', log.operators);
+            sel.attr('value', log.description);
+            sel.text(log.description);
+            $('#ctlog').append(sel);
+            i++;
+        });
+    });
+});
+    </script>
+</html>

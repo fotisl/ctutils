@@ -7,6 +7,7 @@
   "jsnext:main": "src/index.js",
   "scripts": {
     "build": "babel src --compact=false --out-dir build --source-maps",
+    "build-examples": "rollup -c",
     "generate-docs": "jsdoc --destination doc/ src/",
     "lint": "eslint src",
     "postinstall": "npm run build",
@@ -46,6 +47,8 @@
     "jsdoc": "^3.5.5",
     "mocha": "^5.1.1",
     "node-fetch": "^2.1.2",
-    "node-webcrypto-ossl": "^1.0.37"
+    "node-webcrypto-ossl": "^1.0.37",
+    "rollup": "^0.60.4",
+    "rollup-plugin-node-resolve": "^3.3.0"
   }
 }
