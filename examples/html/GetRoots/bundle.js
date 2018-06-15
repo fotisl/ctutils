@@ -20017,8 +20017,10 @@ class CTLogHelper {
 }
 
 CTLogHelper.lists = {
-  google: 'https://www.gstatic.com/ct/log_list/log_list.json',
-  googleAll: 'https://www.gstatic.com/ct/log_list/all_logs_list.json',
+  googleCT: 'https://www.gstatic.com/ct/log_list/log_list.json',
+  googleCTAll: 'https://www.gstatic.com/ct/log_list/all_logs_list.json',
+  googleChromium: 'https://chromium.googlesource.com/chromium/src/+/master' +
+    '/components/certificate_transparency/data/log_list.json?format=TEXT',
   apple: 'https://opensource.apple.com/source/security_certificates/security' +
     '_certificates-55093.40.3/certificate_transparency/log_list.json'
 };
@@ -20126,7 +20128,7 @@ function certToPEM(cert) {
 
 function getLogs() {
   const logHelper = new CTLogHelper();
-  return logHelper.fetch(CTLogHelper.lists.google).then(res => {
+  return logHelper.fetch(CTLogHelper.lists.googleCT).then(res => {
     return logHelper.generateIds();
   }).then(res => {
     let logs = [];

@@ -59,7 +59,7 @@ function certToPEM(cert) {
 
 export function getLogs() {
   const logHelper = new CTUtils.CTLogHelper();
-  return logHelper.fetch(CTUtils.CTLogHelper.lists.google).then(res => {
+  return logHelper.fetch(CTUtils.CTLogHelper.lists.googleCT).then(res => {
     return logHelper.generateIds();
   }).then(res => {
     let logs = [];
